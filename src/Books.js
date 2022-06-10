@@ -61,10 +61,10 @@ class Books extends React.Component {
 			<table className='table table-success table-striped table-bordered' >
 				<thead>
 					<tr className='table-primary'>
-						<td><a href="#" onClick={this.sort} id='bookname'>Book name</a></td>
-						<td><a href="#" onClick={this.sort} id='author'>Author</a></td>
-						<td><a href="#" onClick={this.sort} id='avg_rating'>Average rating</a></td>
-						<td><a href="#" onClick={this.sort} id='rating_count'>Rating count</a></td>
+						<th><button className='btn btn-link' onClick={this.sort} id='bookname'><strong>Book name</strong></button></th>
+						<th><button className='btn btn-link' onClick={this.sort} id='author'><strong>Author</strong></button></th>
+						<th><button className='btn btn-link' onClick={this.sort} id='avg_rating'><strong>Average rating</strong></button></th>
+						<th><button className='btn btn-link' onClick={this.sort} id='rating_count'><strong>Rating count</strong></button></th>
 					</tr>
 				</thead>
 				{tbody}

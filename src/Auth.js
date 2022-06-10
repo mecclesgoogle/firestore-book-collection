@@ -45,7 +45,7 @@ class Auth extends React.Component {
 						<button className='btn btn-secondary' type='button' onClick={this.logoutWithGoogle}>Logout</button>
 					</li>
 					<li className='nav-item'>
-						<img width={50} src={this.state.user.providerData[0].photoURL}></img>
+						<img width={50} src={this.state.user.providerData[0].photoURL} alt='profile'></img>
 					</li>
 				</ul>
 			}

@@ -29,8 +29,8 @@ root.render(
   <BrowserRouter>
     <Routes>
       <Route path="/" element={<App />} >
-        <Route path="books" element={<Books setUser={setUser} getUser={getUser} />} />
-        <Route path="preferences" element={<Preferences getUser={getUser} />} />
+        <Route path="books" element={<Books />} />
+        <Route path="preferences" element={<Preferences />} />
       </Route>
     </Routes>
   </BrowserRouter>

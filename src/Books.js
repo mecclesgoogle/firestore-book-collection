@@ -42,7 +42,6 @@ class Books extends React.Component {
 		this.getBooks('avg_rating');
 		this.subscription = null;
 		this.sort = this.sort.bind(this);
-		this.user = props.getUser();
 	}
 
 	render() {

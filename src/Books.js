@@ -2,24 +2,33 @@ import React from 'react';
 
 import db from './firestore';
 import { collection, onSnapshot, query, orderBy } from "firebase/firestore";
+import BookTableHeader from './BookTableHeader';
 
 class Books extends React.Component {
 
+	/**
+	 * Subscribes to cantwaitbooks2022 collection and updates state[books, last_refreshed]
+	 * @param {string} sortField The field to sort on.
+	 */
 	async getBooks(sortField) {
 		const q = query(collection(db, 'cantwaitbooks2022'), orderBy(sortField, this.sortOrder[sortField]))
 		if (this.unsubscribe != null) {
+			// Reset the subscription.
 			this.unsubscribe();
 			this.unsubscribe = null;
 		}
 		this.unsubscribe = onSnapshot(q,
 			(querySnapshot) => {
-				this.setState({ books: querySnapshot.docs, last_refreshed: new Date().toString() });
+				this.setState({
+					books: querySnapshot.docs,
+					last_refreshed: new Date().toString(),
+				});
 			});
 	}
 
 	sort(e) {
 		e.preventDefault();
-		const field = e.target.id;
+		const field = e.target.parentElement.id;
 		this.reverseSortOrder(field);
 		this.getBooks(field);
 	}
@@ -32,7 +41,6 @@ class Books extends React.Component {
 		} else {
 			this.sortOrder[field] = 'asc';
 		}
-		console.log(`Sort order for ${field} is ${this.sortOrder[field]}`);
 	}
 
 	constructor(props) {
@@ -60,10 +68,10 @@ class Books extends React.Component {
 			<table className='table table-success table-striped table-bordered' >
 				<thead>
 					<tr className='table-primary'>
-						<th><button className='btn btn-link' onClick={this.sort} id='bookname'><strong>Book name</strong></button></th>
-						<th><button className='btn btn-link' onClick={this.sort} id='author'><strong>Author</strong></button></th>
-						<th><button className='btn btn-link' onClick={this.sort} id='avg_rating'><strong>Average rating</strong></button></th>
-						<th><button className='btn btn-link' onClick={this.sort} id='rating_count'><strong>Rating count</strong></button></th>
+						<BookTableHeader text='Book name' id='bookname' onClick={this.sort} />
+						<BookTableHeader text='Author' id='author' onClick={this.sort} />
+						<BookTableHeader text='Average rating' id='avg_rating' onClick={this.sort} />
+						<BookTableHeader text='Rating count' id='rating_count' onClick={this.sort} />
 					</tr>
 				</thead>
 				{tbody}

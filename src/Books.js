@@ -1,70 +1,93 @@
 import React from 'react';
 
 import db from './firestore';
-import { collection, onSnapshot, query, orderBy } from "firebase/firestore";
+import { collection, onSnapshot, query, orderBy, where } from "firebase/firestore";
 import BookTableHeader from './BookTableHeader';
 
 class Books extends React.Component {
 
+	constructor(props) {
+		super(props);
+		this.state = {
+			books: [],
+			last_refreshed: '',
+			myAuthors: false,
+			sortField: 'avg_rating',
+			sortOrder: { 'avg_rating': 'desc' },
+			unsubscribe: null,
+		};
+		this.sort = this.sort.bind(this);
+		this.myAuthorsOnChange = this.myAuthorsOnChange.bind(this);
+	}
+
 	/**
-	 * Subscribes to cantwaitbooks2022 collection and updates state[books, last_refreshed]
-	 * @param {string} sortField The field to sort on.
+	 * Create a Firestore Watch subscription to the books collection.
+	 * If there is already a subscription, cancels and replaces it.
 	 */
-	async getBooks(sortField) {
-		const q = query(collection(db, 'cantwaitbooks2022'), orderBy(sortField, this.sortOrder[sortField]))
-		if (this.unsubscribe != null) {
-			// Reset the subscription.
-			this.unsubscribe();
-			this.unsubscribe = null;
-		}
-		this.unsubscribe = onSnapshot(q,
+	subscribeToBooks() {
+		const q = query(
+			collection(db, 'cantwaitbooks2022'),
+			orderBy(
+				this.state.sortField,
+				this.state.sortOrder[this.state.sortField]
+			),
+		);
+		this.state.unsubscribe && this.state.unsubscribe();
+		const unsubscribe = onSnapshot(q,
 			(querySnapshot) => {
 				this.setState({
 					books: querySnapshot.docs,
 					last_refreshed: new Date().toString(),
 				});
 			});
+		this.setState({ unsubscribe });
+	}
+
+	componentDidMount() {
+		this.subscribeToBooks();
+	}
+
+	componentWillUnmount() {
+		this.state.unsubscribe();
+	}
+
+	componentDidUpdate(prevProps, prevState) {
+		if (prevState.sortField !== this.state.sortField || this.state.sortOrder[this.state.sortField] !== prevState.sortOrder[this.state.sortField]) {
+			console.log('componentDidUpdate determined change needed.');
+			this.subscribeToBooks();
+		}
+
+		if (prevState.myAuthors !== this.state.myAuthors) {
+			console.log('componentDidUpdate determined change needed.');
+			this.subscribeToBooks();
+		}
 	}
 
 	sort(e) {
 		e.preventDefault();
-		const field = e.target.parentElement.id;
-		this.reverseSortOrder(field);
-		this.getBooks(field);
-	}
-
-	reverseSortOrder(field) {
-		if (this.sortOrder.hasOwnProperty(field)) {
-			const direction = this.sortOrder[field];
-			const new_direction = direction === 'asc' ? 'desc' : 'asc';
-			this.sortOrder[field] = new_direction;
+		const sortField = e.target.parentElement.id;
+		if (this.state.sortOrder.hasOwnProperty(sortField)) {
+			const prevDirection = this.state.sortOrder[sortField];
+			const newDirection = prevDirection === 'asc' ? 'desc' : 'asc';
+			this.setState({ sortOrder: { [sortField]: newDirection }, sortField })
 		} else {
-			this.sortOrder[field] = 'asc';
+			this.setState({ sortOrder: { [sortField]: 'asc' }, sortField })
 		}
 	}
 
-	constructor(props) {
-		super(props);
-		this.state = { last_refreshed: '' };
-		this.sortOrder = { 'avg_rating': 'desc' }
-		this.getBooks('avg_rating');
-		this.subscription = null;
-		this.sort = this.sort.bind(this);
+	myAuthorsOnChange(e) {
+		this.setState({
+			myAuthors: !this.state.myAuthors
+		});
 	}
 
 	render() {
-		let tbody = '';
-		if (this.state.books != null) {
-			tbody = <tbody>{this.state.books.map((book) =>
-				<tr key={book.id} id={book.id}>
-					<td>{book.data().bookname}</td>
-					<td>{book.data().author}</td>
-					<td>{book.data().avg_rating}</td>
-					<td>{book.data().rating_count}</td>
-				</tr>)}</tbody>;
-		}
 		return <div>
 			<h2>Books</h2>
+			<label >
+				<input type='checkbox' checked={this.state.myAuthors} onChange={this.myAuthorsOnChange}></input>
+				Show my authors only
+			</label>
 			<table className='table table-success table-striped table-bordered' >
 				<thead>
 					<tr className='table-primary'>
@@ -74,7 +97,13 @@ class Books extends React.Component {
 						<BookTableHeader text='Rating count' id='rating_count' onClick={this.sort} />
 					</tr>
 				</thead>
-				{tbody}
+				<tbody>{this.state.books.map((book) =>
+					<tr key={book.id} id={book.id}>
+						<td>{book.data().bookname}</td>
+						<td>{book.data().author}</td>
+						<td>{book.data().avg_rating}</td>
+						<td>{book.data().rating_count}</td>
+					</tr>)}</tbody>
 			</table>
 			<p>Last refreshed: {this.state.last_refreshed}</p>
 		</div>;

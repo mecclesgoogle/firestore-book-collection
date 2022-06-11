@@ -13,6 +13,12 @@ class Auth extends React.Component {
 
 	constructor(props) {
 		super(props);
+		this.state = { user: auth.currentUser };
+		this.loginWithGoogle = this.loginWithGoogle.bind(this);
+		this.logoutWithGoogle = this.logoutWithGoogle.bind(this);
+	}
+
+	componentDidMount() {
 		onAuthStateChanged(auth, (user) => {
 			if (user) {
 				this.setState({
@@ -24,10 +30,6 @@ class Auth extends React.Component {
 				});
 			}
 		});
-
-		this.state = { user: auth.currentUser };
-		this.loginWithGoogle = this.loginWithGoogle.bind(this);
-		this.logoutWithGoogle = this.logoutWithGoogle.bind(this);
 	}
 
 	async loginWithGoogle(e) {

@@ -8,7 +8,7 @@ import Auth from './Auth.js';
 function App() {
   return (
     <div>
-      <nav className="navbar navbar-expand-lg bg-light fixed-top mb-5">
+      <nav className="navbar navbar-expand-lg bg-light fixed-top mb-5 container">
         <div className="container-fluid">
           <a className="navbar-brand" href="/">Navbar</a>
           <div className="collapse navbar-collapse">

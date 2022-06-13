@@ -1,10 +1,14 @@
-import React from 'react';
+import React, { useContext } from 'react';
 
 import db from './firestore';
-import { collection, onSnapshot, query, orderBy, where } from "firebase/firestore";
+import { collection, onSnapshot, query, orderBy, where, doc, getDoc } from "firebase/firestore";
 import BookTableHeader from './BookTableHeader';
 
+import { AuthConsumer, AuthContext } from './AuthContext';
+
 class Books extends React.Component {
+
+	static contextType = AuthContext;
 
 	constructor(props) {
 		super(props);
@@ -24,14 +28,36 @@ class Books extends React.Component {
 	 * Create a Firestore Watch subscription to the books collection.
 	 * If there is already a subscription, cancels and replaces it.
 	 */
-	subscribeToBooks() {
-		const q = query(
-			collection(db, 'cantwaitbooks2022'),
-			orderBy(
-				this.state.sortField,
-				this.state.sortOrder[this.state.sortField]
-			),
-		);
+	async subscribeToBooks() {
+		let q = null;
+		if (this.state.myAuthors) {
+			const { user } = this.context;
+			const docRef = doc(db, "reading_preferences", user.email);
+			const docSnap = await getDoc(docRef);
+			if (docSnap.exists()) {
+				console.log("Document data:", docSnap.data());
+				q = query(
+					collection(db, 'cantwaitbooks2022'),
+					orderBy(
+						this.state.sortField,
+						this.state.sortOrder[this.state.sortField]
+					),
+					where('author', 'in', docSnap.data().authors)
+				);
+			} else {
+				console.log("No such document!");
+			}
+
+		}
+		if (q == null) {
+			q = query(
+				collection(db, 'cantwaitbooks2022'),
+				orderBy(
+					this.state.sortField,
+					this.state.sortOrder[this.state.sortField]
+				),
+			);
+		}
 		this.state.unsubscribe && this.state.unsubscribe();
 		const unsubscribe = onSnapshot(q,
 			(querySnapshot) => {
@@ -59,6 +85,7 @@ class Books extends React.Component {
 
 		if (prevState.myAuthors !== this.state.myAuthors) {
 			console.log('componentDidUpdate determined change needed.');
+
 			this.subscribeToBooks();
 		}
 	}
@@ -82,31 +109,39 @@ class Books extends React.Component {
 	}
 
 	render() {
-		return <div>
-			<h2>Books</h2>
-			<label >
-				<input type='checkbox' checked={this.state.myAuthors} onChange={this.myAuthorsOnChange}></input>
-				Show my authors only
-			</label>
-			<table className='table table-success table-striped table-bordered' >
-				<thead>
-					<tr className='table-primary'>
-						<BookTableHeader text='Book name' id='bookname' onClick={this.sort} />
-						<BookTableHeader text='Author' id='author' onClick={this.sort} />
-						<BookTableHeader text='Average rating' id='avg_rating' onClick={this.sort} />
-						<BookTableHeader text='Rating count' id='rating_count' onClick={this.sort} />
-					</tr>
-				</thead>
-				<tbody>{this.state.books.map((book) =>
-					<tr key={book.id} id={book.id}>
-						<td>{book.data().bookname}</td>
-						<td>{book.data().author}</td>
-						<td>{book.data().avg_rating}</td>
-						<td>{book.data().rating_count}</td>
-					</tr>)}</tbody>
-			</table>
-			<p>Last refreshed: {this.state.last_refreshed}</p>
-		</div>;
+		return (
+			<AuthConsumer>
+				{({ user }) => (
+					<>
+						<h2>Books</h2>
+						{user != null &&
+							<label >
+								<input type='checkbox' checked={this.state.myAuthors} onChange={this.myAuthorsOnChange}></input>
+								Show my authors only
+							</label>
+						}
+						<table className='table table-success table-striped table-bordered' >
+							<thead>
+								<tr className='table-primary'>
+									<BookTableHeader text='Book name' id='bookname' onClick={this.sort} />
+									<BookTableHeader text='Author' id='author' onClick={this.sort} />
+									<BookTableHeader text='Average rating' id='avg_rating' onClick={this.sort} />
+									<BookTableHeader text='Rating count' id='rating_count' onClick={this.sort} />
+								</tr>
+							</thead>
+							<tbody>{this.state.books.map((book) =>
+								<tr key={book.id} id={book.id}>
+									<td>{book.data().bookname}</td>
+									<td>{book.data().author}</td>
+									<td>{book.data().avg_rating}</td>
+									<td>{book.data().rating_count}</td>
+								</tr>)}</tbody>
+						</table>
+						<p>Last refreshed: {this.state.last_refreshed}</p>
+					</>
+				)}
+			</AuthConsumer>
+		);
 	}
 }
 

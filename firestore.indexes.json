@@ -1,4 +1,13 @@
 {
-  "indexes": [],
+  "indexes": [
+    { 
+      "collectionGroup": "cantwaitbooks2022",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "author", "order": "DESCENDING" },
+        { "fieldPath": "avg_rating", "order": "DESCENDING" }
+      ]
+    }
+  ],
   "fieldOverrides": []
 }

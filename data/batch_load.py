@@ -57,21 +57,22 @@ def batch_write_to_firestore(db: firestore.Client, books: list):
   """
   batch = db.batch()
   col_ref = db.collection(u'cantwaitbooks2022')
-
   for book in books:
     doc_ref = col_ref.document() # No argument -> auto-gen ID
-    # We use lower_camel_case which seems to be a naming convention (?)
-    batch.set(doc_ref, {u'bookname': book['BookName'], u'author': book['AuthorName'], u'avg_rating': book['AverageRating'],
-              u'rating_count': book['RatingCount'], u'score': book['Score'], u'total_people_voted': book['TotalPeopleVoted']})
+    batch.set(doc_ref, {
+      u'bookname': book['BookName'], 
+      u'author': book['AuthorName'], 
+      u'avg_rating': book['AverageRating'],
+      u'rating_count': book['RatingCount'], 
+      u'score': book['Score'], 
+      u'total_people_voted': book['TotalPeopleVoted']
+    })
 
-  # Commit the batch
-  # TODO(markeccles): Error handling
   batch.commit()
 
 
 with open('cantwaitbooks2022.csv', newline='') as books:
     books_reader = csv.DictReader(books)
-    print(books_reader.fieldnames)
     cleaned_book_data = []
     for row in books_reader:
       cleaned_book_data.append(clean_data(row))
@@ -81,6 +82,4 @@ with open('cantwaitbooks2022.csv', newline='') as books:
     for i in range(0, len(cleaned_book_data), 500):
       chunk = cleaned_book_data[i:i+500]
       print(f'Writing chunk of len {len(chunk)}')
-      print('Write commented out for testing!')
-      # TODO(markeccles): Add actual unit tests.
-      # batch_write_to_firestore(fs, chunk)
+      batch_write_to_firestore(fs, chunk)

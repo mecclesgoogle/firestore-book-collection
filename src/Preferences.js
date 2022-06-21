@@ -35,7 +35,7 @@ function Preferences(props) {
 	}, [userContext]); // <-- run when user logs in or logs out
 
 	function handleAuthorChange(e) {
-		setAuthor(e.target.value);
+		setAuthor(e.target.value.trim());
 	}
 
 	function onSubmitPreferences(e) {

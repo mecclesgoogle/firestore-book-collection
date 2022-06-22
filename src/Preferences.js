@@ -1,10 +1,17 @@
 import React, { useState, useEffect, useContext } from 'react';
 
 import db from './firestore';
-import { collection, onSnapshot, query, where, updateDoc, setDoc, doc } from "firebase/firestore";
+import { onSnapshot, updateDoc, setDoc, doc } from "firebase/firestore";
 
 import { AuthConsumer, AuthContext } from './AuthContext';
 
+function initializePreferences(useremail) {
+	setDoc(doc(db, "reading_preferences", useremail), {
+		authors: [],
+		want_to_read: [],
+		read: [],
+	});
+}
 
 function Preferences(props) {
 	const [userPrefs, setUserPrefs] = useState();
@@ -14,18 +21,14 @@ function Preferences(props) {
 	useEffect(() => {
 		if (userContext.user != null) {
 			const email = userContext.user.providerData[0].email;
-			const q = query(collection(db, 'reading_preferences'), where('emailaddress', '==', email));
-			onSnapshot(q,
+			const prefsRef = doc(db, "reading_preferences", email);
+			onSnapshot(prefsRef,
 				(querySnapshot) => {
-					console.log(querySnapshot.docs);
-					if (querySnapshot.docs.length === 0) {
+					if (!querySnapshot.exists()) {
 						console.log('User has no prefs, initializing it now.');
-						setDoc(doc(db, "reading_preferences", email), {
-							authors: [],
-							emailaddress: email,
-						});
+						initializePreferences(email);
 					} else {
-						setUserPrefs(querySnapshot.docs[0]);
+						setUserPrefs(querySnapshot);
 					}
 				});
 		} else {

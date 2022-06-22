@@ -1,7 +1,7 @@
 import React, { useContext } from 'react';
 
 import db from './firestore';
-import { collection, onSnapshot, query, orderBy, where, doc, getDoc, updateDoc, limit } from "firebase/firestore";
+import { collection, onSnapshot, query, orderBy, where, doc, getDoc, updateDoc, limit, arrayRemove, arrayUnion } from "firebase/firestore";
 import BookTableHeader from './BookTableHeader';
 
 import { AuthConsumer, AuthContext } from './AuthContext';
@@ -151,14 +151,14 @@ class Books extends React.Component {
 		const bookId = e.target.parentElement.parentElement.id;
 		const { user } = this.context;
 		const prefsRef = doc(db, "reading_preferences", user.email);
-		const prefsSnap = await getDoc(prefsRef);
-		const prefs = prefsSnap.data();
 		if (checked) {
-			prefs.want_to_read = [...prefs.want_to_read, bookId];
-			updateDoc(prefsSnap.ref, prefs);
+			updateDoc(prefsRef, {
+				want_to_read: arrayUnion(bookId),
+			});
 		} else {
-			prefs.want_to_read = prefs.want_to_read.filter(item => item !== bookId);
-			updateDoc(prefsSnap.ref, prefs);
+			updateDoc(prefsRef, {
+				want_to_read: arrayRemove(bookId),
+			});
 		}
 	}
 
@@ -167,14 +167,14 @@ class Books extends React.Component {
 		const bookId = e.target.parentElement.parentElement.id;
 		const { user } = this.context;
 		const prefsRef = doc(db, "reading_preferences", user.email);
-		const prefsSnap = await getDoc(prefsRef);
-		const prefs = prefsSnap.data();
 		if (checked) {
-			prefs.read = [...prefs.read, bookId];
-			updateDoc(prefsSnap.ref, prefs);
+			updateDoc(prefsRef, {
+				read: arrayUnion(bookId),
+			});
 		} else {
-			prefs.read = prefs.read.filter(item => item !== bookId);
-			updateDoc(prefsSnap.ref, prefs);
+			updateDoc(prefsRef, {
+				read: arrayRemove(bookId),
+			});
 		}
 	}
 

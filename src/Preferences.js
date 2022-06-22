@@ -1,10 +1,14 @@
 import React, { useState, useEffect, useContext } from 'react';
 
 import db from './firestore';
-import { onSnapshot, updateDoc, setDoc, doc } from "firebase/firestore";
+import { onSnapshot, updateDoc, setDoc, doc, arrayUnion, arrayRemove } from "firebase/firestore";
 
 import { AuthConsumer, AuthContext } from './AuthContext';
 
+/**
+ * Creates user preferences in Firestore.
+ * @param {string} useremail 
+ */
 function initializePreferences(useremail) {
 	setDoc(doc(db, "reading_preferences", useremail), {
 		authors: [],
@@ -19,18 +23,25 @@ function Preferences(props) {
 	const userContext = useContext(AuthContext);
 
 	useEffect(() => {
+		console.log('useEffect: userPrefs');
+		console.log(userPrefs);
+	}, [userPrefs]);
+
+	useEffect(() => {
 		if (userContext.user != null) {
 			const email = userContext.user.providerData[0].email;
 			const prefsRef = doc(db, "reading_preferences", email);
-			onSnapshot(prefsRef,
+			const unsubscribe = onSnapshot(prefsRef,
 				(querySnapshot) => {
 					if (!querySnapshot.exists()) {
 						console.log('User has no prefs, initializing it now.');
 						initializePreferences(email);
 					} else {
+						console.log('setUserPrefs');
 						setUserPrefs(querySnapshot);
 					}
 				});
+			return () => unsubscribe()
 		} else {
 			// User logged out
 			setUserPrefs(null);
@@ -43,21 +54,17 @@ function Preferences(props) {
 
 	function onSubmitPreferences(e) {
 		e.preventDefault();
-		const data = userPrefs.data();
-		if (!data.authors.includes(author)) {
-			data.authors.push(author);
-			updateDoc(userPrefs.ref, data);
-		}
+		updateDoc(userPrefs.ref, {
+			authors: arrayUnion(author)
+		});
 	}
 
 	function removeAuthor(e) {
 		e.preventDefault();
 		const author = e.target.parentElement.id;
-		const data = userPrefs.data();
-		data.authors = data.authors.filter(
-			(value) => value !== author
-		);
-		updateDoc(userPrefs.ref, data);
+		updateDoc(userPrefs.ref, {
+			authors: arrayRemove(author)
+		});
 	}
 
 	return (

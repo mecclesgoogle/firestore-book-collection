@@ -47,8 +47,8 @@ class Auth extends React.Component {
 					this.state.user == null ?
 						(<button className='btn btn-secondary' type='button' onClick={this.loginWithGoogle}>Login</button>) :
 						(<ul className="navbar-nav">
-							<li className='nav-item'>
-								<button className='btn btn-secondary' type='button' onClick={this.logoutWithGoogle}>Logout</button>
+							<li className='nav-item mx-3'>
+								<button className='btn btn-secondary align-middle h-100' type='button' onClick={this.logoutWithGoogle}>Logout</button>
 							</li>
 							<li className='nav-item'>
 								<img width={50} src={this.state.user.providerData[0].photoURL} alt='profile'></img>

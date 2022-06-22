@@ -1,20 +1,22 @@
 rules_version = '2';
-// Allow read/write access on all documents to any user signed in to the application
 // The schema for request.auth is below.
 // https://firebase.google.com/docs/reference/rules/rules.firestore.Request#auth
 service cloud.firestore {
   match /databases/{database}/documents {
+    // Default allow all for authenticated user.
     match /{document=**} {
       allow read, write: if request.auth != null;
     }
-    // Match any document in the 'cities' collection
+    // Anyone can read from 'cantwaitbooks2022' collection
     match /cantwaitbooks2022/{book} {
-      allow read: if true; // Anyone can read
+      allow read: if true;
     }
 
+    // Allow a user to update their own preferences (id of doc == email)
+    // Allow a user to create their own preferences (TODO)
     match /preferences/{pref} {
       allow read, update, delete: if request.auth != null && request.auth.uid == userId;
-      allow create: if request.auth != null;
+      allow create: if request.auth != null ;
     }
   }
 }

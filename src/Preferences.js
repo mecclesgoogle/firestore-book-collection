@@ -32,18 +32,15 @@ function Preferences(props) {
 			const email = userContext.user.providerData[0].email;
 			const prefsRef = doc(db, "reading_preferences", email);
 			const unsubscribe = onSnapshot(prefsRef,
-				(querySnapshot) => {
-					if (!querySnapshot.exists()) {
-						console.log('User has no prefs, initializing it now.');
+				(prefsSnapshot) => {
+					if (!prefsSnapshot.exists()) {
 						initializePreferences(email);
 					} else {
-						console.log('setUserPrefs');
-						setUserPrefs(querySnapshot);
+						setUserPrefs(prefsSnapshot);
 					}
 				});
 			return () => unsubscribe()
 		} else {
-			// User logged out
 			setUserPrefs(null);
 		}
 	}, [userContext]); // <-- run when user logs in or logs out
